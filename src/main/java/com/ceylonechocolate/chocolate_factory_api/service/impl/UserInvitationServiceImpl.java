@@ -7,6 +7,7 @@ import com.ceylonechocolate.chocolate_factory_api.exception.BusinessException;
 import com.ceylonechocolate.chocolate_factory_api.repository.RoleRepository;
 import com.ceylonechocolate.chocolate_factory_api.repository.UserInvitationRepository;
 import com.ceylonechocolate.chocolate_factory_api.repository.UserRepository;
+import com.ceylonechocolate.chocolate_factory_api.service.EmailService;
 import com.ceylonechocolate.chocolate_factory_api.service.UserInvitationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,6 +24,7 @@ public class UserInvitationServiceImpl implements UserInvitationService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserInvitationRepository userInvitationRepository;
+    private final EmailService emailService;
 
     @Override
     public InviteManagerResponse inviteManager(InviteManagerRequest request, Authentication authentication) {
@@ -61,6 +63,11 @@ public class UserInvitationServiceImpl implements UserInvitationService {
         invitation.setCreatedAt(LocalDateTime.now());
 
         UserInvitation saved = userInvitationRepository.save(invitation);
+
+        System.out.println("Sending email to: " + saved.getEmail());
+
+        // Send invitation email
+        emailService.sendInvitationEmail(saved.getEmail(), saved.getToken());
 
         return InviteManagerResponse.builder()
                 .invitationId(saved.getId())

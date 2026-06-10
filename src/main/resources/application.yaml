@@ -19,6 +19,18 @@ spring:
       hibernate:
         format_sql: true
 
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: //
+    password: //
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 app:
   jwt:
     secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
