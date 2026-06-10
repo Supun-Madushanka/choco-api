@@ -71,4 +71,12 @@ public class GlobalExceptionHandler {
                         "Something went wrong. Please try again."
                 ));
     }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
 }
