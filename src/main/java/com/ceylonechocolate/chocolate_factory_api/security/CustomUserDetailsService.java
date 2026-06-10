@@ -30,12 +30,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                         "User not found with email: " + email
                 ));
 
-        if (!user.getIsActive()) {
-            throw new UsernameNotFoundException(
-                    "User account is deactivated: " + email
-            );
-        }
-
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPasswordHash(),

@@ -26,7 +26,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
 
-        // Step 1 — Authenticate email and password
+        // Load user from database
+        User user = userRepository
+                .findByEmailAndIsDeletedFalse(request.getEmail())
+                .orElseThrow(() ->
+                        new BadCredentialsException("User not found")
+                );
+
+        // Authenticate email and password
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -38,22 +45,14 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Invalid email or password");
         }
 
-        // Step 2 — Load user from database
-        User user = userRepository
-                .findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new BadCredentialsException("User not found with email: " + request.getEmail())
-                );
-
-        // Step 3 — Check if user is active
+        // Check if user is active
         if (!user.getIsActive()) {
             throw new BadCredentialsException(
-                    "Your account has been deactivated. " +
-                            "Please contact HR."
+                    "Your account has been deactivated. Please contact support."
             );
         }
 
-        // Step 4 — Generate tokens
+        // Generate tokens
         String accessToken = jwtUtil.generateToken(
                 user.getEmail(),
                 user.getRole().getName(),
@@ -64,11 +63,11 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail()
         );
 
-        // Step 5 — Update last login time
+        // Update last login time
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
-        // Step 6 — Build and return response
+        // Build and return response
         return AuthResponse.builder()
                 .userId(user.getId())
                 .fullName(user.getFullName())
