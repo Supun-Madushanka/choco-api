@@ -11,11 +11,14 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class InviteManagerResponse {
+public class InvitationResponse {
 
-    private Long invitationId;
+    private Long id;
     private String email;
-    private String role;
+    private String roleName;
+    private String roleDisplayName;
+    private String invitedByName;
     private String status;
     private LocalDateTime expiresAt;
+    private LocalDateTime createdAt;
 }

@@ -21,13 +21,14 @@ public class UserInvitation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "invited_by", nullable = false)
-    private Long invitedBy;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invited_by", nullable = false)
+    private User invitedBy;
 
     @Column(nullable = false)
     private String email;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 

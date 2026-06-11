@@ -37,6 +37,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints — no token needed
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/users/invite/validate").permitAll()
+                        .requestMatchers("/api/v1/users/invite/accept").permitAll()
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
