@@ -4,7 +4,10 @@ import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.ApiResponse;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
+import com.ceylonechocolate.chocolate_factory_api.dto.response.UserResponse;
 import com.ceylonechocolate.chocolate_factory_api.service.AuthService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -51,6 +54,19 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Logged out successfully")
+        );
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getMe(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UserResponse userResponse = authService.getMe(
+                userDetails.getUsername()
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success("User fetched successfully", userResponse)
         );
     }
 }

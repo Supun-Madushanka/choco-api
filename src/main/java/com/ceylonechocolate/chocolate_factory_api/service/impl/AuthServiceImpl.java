@@ -3,6 +3,7 @@ package com.ceylonechocolate.chocolate_factory_api.service.impl;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
+import com.ceylonechocolate.chocolate_factory_api.dto.response.UserResponse;
 import com.ceylonechocolate.chocolate_factory_api.entity.TokenBlacklist;
 import com.ceylonechocolate.chocolate_factory_api.entity.User;
 import com.ceylonechocolate.chocolate_factory_api.repository.TokenBlacklistRepository;
@@ -171,6 +172,30 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         tokenBlacklistRepository.save(blacklistedToken);
+    }
+
+    @Override
+    public UserResponse getMe(String email) {
+
+        User user = userRepository
+                .findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() ->
+                        new BadCredentialsException("User not found")
+                );
+
+        return UserResponse.builder()
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .profileImage(user.getProfileImage())
+                .role(user.getRole().getName())
+                .roleDisplayName(user.getRole().getDisplayName())
+                .roleLevel(user.getRole().getLevel().name())
+                .isActive(user.getIsActive())
+                .lastLoginAt(user.getLastLoginAt())
+                .createdAt(user.getCreatedAt())
+                .build();
     }
 
 }
