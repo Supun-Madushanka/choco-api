@@ -1,5 +1,6 @@
 package com.ceylonechocolate.chocolate_factory_api.controller;
 
+import com.ceylonechocolate.chocolate_factory_api.dto.request.ChangePasswordRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.ApiResponse;
@@ -67,6 +68,21 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("User fetched successfully", userResponse)
+        );
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        authService.changePassword(
+                userDetails.getUsername(),
+                request
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Password changed successfully")
         );
     }
 }

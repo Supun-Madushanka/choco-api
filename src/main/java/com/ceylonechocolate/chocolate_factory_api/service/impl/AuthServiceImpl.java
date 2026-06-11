@@ -1,5 +1,6 @@
 package com.ceylonechocolate.chocolate_factory_api.service.impl;
 
+import com.ceylonechocolate.chocolate_factory_api.dto.request.ChangePasswordRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
@@ -15,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -197,5 +200,45 @@ public class AuthServiceImpl implements AuthService {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
+
+    @Override
+    public void changePassword(String email, ChangePasswordRequest request) {
+        // Load user
+        User user = userRepository
+                .findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() ->
+                        new BadCredentialsException("User not found")
+                );
+
+        // Verify current password
+        if (!passwordEncoder.matches(
+                request.getCurrentPassword(),
+                user.getPasswordHash())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+
+        // Check new password and confirm password match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException(
+                    "New password and confirm password do not match"
+            );
+        }
+
+        // Check new password is different from current
+        if (passwordEncoder.matches(
+                request.getNewPassword(),
+                user.getPasswordHash())) {
+            throw new IllegalArgumentException(
+                    "New password must be different from current password"
+            );
+        }
+
+        // Update password
+        user.setPasswordHash(
+                passwordEncoder.encode(request.getNewPassword())
+        );
+        userRepository.save(user);
+    }
+
 
 }
