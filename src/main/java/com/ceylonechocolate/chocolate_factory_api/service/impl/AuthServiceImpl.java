@@ -1,17 +1,20 @@
 package com.ceylonechocolate.chocolate_factory_api.service.impl;
 
-import com.ceylonechocolate.chocolate_factory_api.dto.request.ChangePasswordRequest;
-import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
-import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
+import com.ceylonechocolate.chocolate_factory_api.dto.request.*;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.UserResponse;
+import com.ceylonechocolate.chocolate_factory_api.entity.PasswordResetToken;
 import com.ceylonechocolate.chocolate_factory_api.entity.TokenBlacklist;
 import com.ceylonechocolate.chocolate_factory_api.entity.User;
+import com.ceylonechocolate.chocolate_factory_api.repository.PasswordResetTokenRepository;
 import com.ceylonechocolate.chocolate_factory_api.repository.TokenBlacklistRepository;
 import com.ceylonechocolate.chocolate_factory_api.repository.UserRepository;
 import com.ceylonechocolate.chocolate_factory_api.security.JwtUtil;
 import com.ceylonechocolate.chocolate_factory_api.service.AuthService;
+import com.ceylonechocolate.chocolate_factory_api.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,7 +25,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -32,6 +37,11 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final TokenBlacklistRepository tokenBlacklistRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -240,5 +250,101 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
     }
 
+    @Override
+    public void forgotPassword(ForgotPasswordRequest request) {
+        // Find user by email
+        User user = userRepository
+                .findByEmailAndIsDeletedFalse(request.getEmail())
+                .orElse(null);
 
+        if (user == null || !user.getIsActive()) {
+            return;
+        }
+
+        // Check if pending token already exists
+        // If yes, expire it first
+        passwordResetTokenRepository
+                .findByUserIdAndStatus(
+                        user.getId(),
+                        PasswordResetToken.TokenStatus.PENDING
+                )
+                .ifPresent(existingToken -> {
+                    existingToken.setStatus(
+                            PasswordResetToken.TokenStatus.EXPIRED
+                    );
+                    passwordResetTokenRepository.save(existingToken);
+                });
+
+        // Generate new token
+        String token = UUID.randomUUID().toString();
+
+        // Save token
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .user(user)
+                .token(token)
+                .status(PasswordResetToken.TokenStatus.PENDING)
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        // Send email
+        String resetLink = frontendUrl +
+                "/reset-password?token=" + token;
+
+        emailService.sendPasswordResetEmail(
+                user.getEmail(),
+                user.getFullName(),
+                resetLink
+        );
+
+        log.info("Password reset email sent to: {}", user.getEmail());
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        // Find token
+        PasswordResetToken resetToken = passwordResetTokenRepository
+                .findByToken(request.getToken())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Invalid reset token")
+                );
+
+        // Check if expired
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            resetToken.setStatus(PasswordResetToken.TokenStatus.EXPIRED);
+            passwordResetTokenRepository.save(resetToken);
+            throw new IllegalArgumentException("Reset token has expired");
+        }
+
+        // Check if already used
+        if (resetToken.getStatus() ==
+                PasswordResetToken.TokenStatus.USED) {
+            throw new IllegalArgumentException(
+                    "Reset token has already been used"
+            );
+        }
+
+        // Check passwords match
+        if (!request.getNewPassword()
+                .equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException(
+                    "Passwords do not match"
+            );
+        }
+
+        // Update password
+        User user = resetToken.getUser();
+        user.setPasswordHash(
+                passwordEncoder.encode(request.getNewPassword())
+        );
+        userRepository.save(user);
+
+        // Mark token as used
+        resetToken.setStatus(PasswordResetToken.TokenStatus.USED);
+        resetToken.setUsedAt(LocalDateTime.now());
+        passwordResetTokenRepository.save(resetToken);
+
+        log.info("Password reset successful for: {}", user.getEmail());
+    }
 }

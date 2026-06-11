@@ -1,8 +1,6 @@
 package com.ceylonechocolate.chocolate_factory_api.controller;
 
-import com.ceylonechocolate.chocolate_factory_api.dto.request.ChangePasswordRequest;
-import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
-import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
+import com.ceylonechocolate.chocolate_factory_api.dto.request.*;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.ApiResponse;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.UserResponse;
@@ -83,6 +81,31 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Password changed successfully")
+        );
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+
+        authService.forgotPassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "If your email is registered you will " +
+                                "receive a password reset link shortly"
+                )
+        );
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+
+        authService.resetPassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Password reset successfully")
         );
     }
 }
