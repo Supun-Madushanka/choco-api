@@ -1,6 +1,7 @@
 package com.ceylonechocolate.chocolate_factory_api.service.impl;
 
 import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
+import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
 import com.ceylonechocolate.chocolate_factory_api.entity.User;
 import com.ceylonechocolate.chocolate_factory_api.repository.UserRepository;
@@ -78,4 +79,57 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+    @Override
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        // Extract email from refresh token
+        String email;
+        try {
+            email = jwtUtil.extractEmail(request.getRefreshToken());
+        } catch (Exception e) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+
+        // Load user from database
+        User user = userRepository
+                .findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() ->
+                        new BadCredentialsException("Invalid refresh token")
+                );
+
+        // Check if user is still active
+        if (!user.getIsActive()) {
+            throw new BadCredentialsException(
+                    "Your account has been deactivated. Please contact support."
+            );
+        }
+
+        // Validate refresh token
+        if (!jwtUtil.isTokenValid(request.getRefreshToken(), user.getEmail())) {
+            throw new BadCredentialsException("Refresh token is expired or invalid");
+        }
+
+        // Generate new tokens
+        String newAccessToken = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getRole().getName(),
+                user.getId()
+        );
+
+        String newRefreshToken = jwtUtil.generateRefreshToken(
+                user.getEmail()
+        );
+
+        // Return response
+        return AuthResponse.builder()
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .roleDisplayName(user.getRole().getDisplayName())
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
+    }
+
 }

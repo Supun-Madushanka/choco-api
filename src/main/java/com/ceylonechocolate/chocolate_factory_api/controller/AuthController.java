@@ -1,6 +1,7 @@
 package com.ceylonechocolate.chocolate_factory_api.controller;
 
 import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
+import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.ApiResponse;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
 import com.ceylonechocolate.chocolate_factory_api.service.AuthService;
@@ -26,5 +27,16 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success("Login successful", authResponse));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request) {
+
+        AuthResponse authResponse = authService.refreshToken(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Token refreshed successfully", authResponse)
+        );
     }
 }
