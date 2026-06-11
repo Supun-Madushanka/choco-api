@@ -79,6 +79,10 @@ public class JwtUtil {
         return extractClaims(token).getExpiration().before(new Date());
     }
 
+    public Date extractExpiration(String token) {
+        return extractClaims(token).getExpiration();
+    }
+
     // Extract all claims
     private Claims extractClaims(String token) {
         return Jwts.parser()

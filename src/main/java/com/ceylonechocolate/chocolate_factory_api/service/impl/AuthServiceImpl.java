@@ -3,7 +3,9 @@ package com.ceylonechocolate.chocolate_factory_api.service.impl;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.LoginRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.request.RefreshTokenRequest;
 import com.ceylonechocolate.chocolate_factory_api.dto.response.AuthResponse;
+import com.ceylonechocolate.chocolate_factory_api.entity.TokenBlacklist;
 import com.ceylonechocolate.chocolate_factory_api.entity.User;
+import com.ceylonechocolate.chocolate_factory_api.repository.TokenBlacklistRepository;
 import com.ceylonechocolate.chocolate_factory_api.repository.UserRepository;
 import com.ceylonechocolate.chocolate_factory_api.security.JwtUtil;
 import com.ceylonechocolate.chocolate_factory_api.service.AuthService;
@@ -15,6 +17,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -130,6 +135,42 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();
+    }
+
+    @Override
+    public void logout(String token) {
+
+        // Step 1 — Validate token
+        String email;
+        try {
+            email = jwtUtil.extractEmail(token);
+        } catch (Exception e) {
+            throw new BadCredentialsException("Invalid token");
+        }
+
+        // Step 2 — Check if already blacklisted
+        if (tokenBlacklistRepository.existsByToken(token)) {
+            throw new BadCredentialsException("Token already invalidated");
+        }
+
+        // Step 3 — Get token expiry
+        Date expiryDate;
+        try {
+            expiryDate = jwtUtil.extractExpiration(token);
+        } catch (Exception e) {
+            throw new BadCredentialsException("Invalid token");
+        }
+
+        // Step 4 — Add token to blacklist
+        TokenBlacklist blacklistedToken = TokenBlacklist.builder()
+                .token(token)
+                .email(email)
+                .expiresAt(expiryDate.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime())
+                .build();
+
+        tokenBlacklistRepository.save(blacklistedToken);
     }
 
 }

@@ -39,4 +39,18 @@ public class AuthController {
                 ApiResponse.success("Token refreshed successfully", authResponse)
         );
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader("Authorization") String authHeader) {
+
+        // Extract token from Bearer header
+        String token = authHeader.substring(7);
+
+        authService.logout(token);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Logged out successfully")
+        );
+    }
 }

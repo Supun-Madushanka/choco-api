@@ -1,5 +1,6 @@
 package com.ceylonechocolate.chocolate_factory_api.security;
 
+import com.ceylonechocolate.chocolate_factory_api.repository.TokenBlacklistRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     @Override
     protected void doFilterInternal(
@@ -39,6 +41,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Extract token
         final String token = authHeader.substring(7);
+
+        // Check if token is blacklisted (logged out)
+        if (tokenBlacklistRepository.existsByToken(token)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String email = jwtUtil.extractEmail(token);
 
         // If email extracted and no authentication set yet
