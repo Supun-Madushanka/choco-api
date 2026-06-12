@@ -33,6 +33,7 @@ public class SecurityConfig {
             throws Exception {
 
         http
+                .cors(cors -> cors.configure(http))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints — no token needed
