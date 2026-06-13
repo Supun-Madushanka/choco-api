@@ -108,4 +108,19 @@ public class AuthController {
                 ApiResponse.success("Password reset successfully")
         );
     }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody UpdateProfileRequest request) {
+
+        UserResponse userResponse = authService.updateProfile(
+                userDetails.getUsername(),
+                request
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Profile updated successfully", userResponse)
+        );
+    }
 }

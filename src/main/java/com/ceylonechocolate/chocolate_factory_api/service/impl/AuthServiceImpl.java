@@ -347,4 +347,43 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Password reset successful for: {}", user.getEmail());
     }
+
+    @Override
+    public UserResponse updateProfile(String email, UpdateProfileRequest request) {
+
+        // Load user
+        User user = userRepository
+                .findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() ->
+                        new BadCredentialsException("User not found")
+                );
+
+        // Update fields if provided
+        if (request.getFullName() != null &&
+                !request.getFullName().isBlank()) {
+            user.setFullName(request.getFullName());
+        }
+
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone());
+        }
+
+        // Save
+        userRepository.save(user);
+
+        // Return updated user
+        return UserResponse.builder()
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .profileImage(user.getProfileImage())
+                .role(user.getRole().getName())
+                .roleDisplayName(user.getRole().getDisplayName())
+                .roleLevel(user.getRole().getLevel().name())
+                .isActive(user.getIsActive())
+                .lastLoginAt(user.getLastLoginAt())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
 }
