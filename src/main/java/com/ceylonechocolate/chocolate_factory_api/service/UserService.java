@@ -27,4 +27,6 @@ public interface UserService {
     void activateUser(Long id);
 
     void changeUserRole(Long id, Long roleId);
+
+    List<UserResponse> getUsersWithoutEmployeeProfile();
 }

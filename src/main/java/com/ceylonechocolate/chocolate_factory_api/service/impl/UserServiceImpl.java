@@ -285,6 +285,14 @@ public class UserServiceImpl implements UserService {
         log.info("User role changed: {} -> {}", user.getEmail(), role.getName());
     }
 
+    @Override
+    public List<UserResponse> getUsersWithoutEmployeeProfile() {
+        return userRepository.findUsersWithoutEmployeeProfile()
+                .stream()
+                .map(this::mapToUserResponse)
+                .collect(Collectors.toList());
+    }
+
     // MAPPER
     private InvitationResponse mapToInvitationResponse(
             UserInvitation invitation) {

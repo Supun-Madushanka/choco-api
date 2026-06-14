@@ -123,4 +123,14 @@ public class UserController {
                 ApiResponse.success("User role changed successfully")
         );
     }
+
+    @GetMapping("/unlinked")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HR_MANAGER')")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsersWithoutEmployeeProfile() {
+        List<UserResponse> users = userService
+                .getUsersWithoutEmployeeProfile();
+        return ResponseEntity.ok(
+                ApiResponse.success("Unlinked users fetched successfully", users)
+        );
+    }
 }
