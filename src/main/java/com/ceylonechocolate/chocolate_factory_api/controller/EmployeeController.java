@@ -105,4 +105,20 @@ public class EmployeeController {
                 ApiResponse.success("Employee activated successfully")
         );
     }
+
+    @GetMapping("/next-number")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HR_MANAGER','HR_OFFICER')")
+    public ResponseEntity<ApiResponse<String>> getNextEmployeeNumber(
+            @RequestParam Long departmentId) {
+
+        String nextNumber = employeeService
+                .getNextEmployeeNumber(departmentId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Next employee number generated",
+                        nextNumber
+                )
+        );
+    }
 }

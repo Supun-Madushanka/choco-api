@@ -23,4 +23,6 @@ public interface EmployeeService {
     void deactivateEmployee(Long id);
 
     void activateEmployee(Long id);
+
+    String getNextEmployeeNumber(Long departmentId);
 }

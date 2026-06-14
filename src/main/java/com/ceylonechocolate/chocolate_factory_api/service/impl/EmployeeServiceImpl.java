@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -221,6 +222,41 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setStatus(Employee.EmployeeStatus.ACTIVE);
         employeeRepository.save(employee);
         log.info("Employee activated: {}", employee.getEmployeeNo());
+    }
+
+    private static final Map<String, String> DEPARTMENT_PREFIXES = Map.of(
+            "Management",       "MGT",
+            "Production",       "PRD",
+            "Warehouse",        "WHS",
+            "Finance",          "FIN",
+            "Sales",            "SAL",
+            "HR",               "HR",
+            "Procurement",      "PRC",
+            "Quality Control",  "QC"
+    );
+
+    @Override
+    public String getNextEmployeeNumber(Long departmentId) {
+
+        // Load department
+        Department department = departmentRepository
+                .findById(departmentId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Department not found")
+                );
+
+        // Get prefix
+        String prefix = DEPARTMENT_PREFIXES
+                .getOrDefault(department.getName(), "EMP");
+
+        // Count existing employees in this department
+        long count = employeeRepository
+                .findByDepartmentIdAndIsDeletedFalse(departmentId)
+                .size();
+
+        // Generate next number
+        long nextNumber = count + 1;
+        return String.format("%s-%03d", prefix, nextNumber);
     }
 
     private Employee findEmployeeById(Long id) {
