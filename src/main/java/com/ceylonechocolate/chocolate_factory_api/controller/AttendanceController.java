@@ -7,6 +7,7 @@ import com.ceylonechocolate.chocolate_factory_api.service.AttendanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -95,6 +96,19 @@ public class AttendanceController {
                 ApiResponse.success("Attendance updated successfully",
                         attendanceService.updateAttendance(
                                 id, request, userDetails.getUsername()))
+        );
+    }
+
+    @PostMapping("/employee/{employeeId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HR_MANAGER')")
+    public ResponseEntity<ApiResponse<AttendanceResponse>> createForEmployee(
+            @PathVariable Long employeeId,
+            @Valid @RequestBody AttendanceRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success("Attendance record created successfully",
+                        attendanceService.createAttendanceForEmployee(
+                                employeeId, request, userDetails.getUsername()))
         );
     }
 }

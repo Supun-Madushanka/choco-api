@@ -25,4 +25,7 @@ public interface AttendanceService {
 
     AttendanceResponse updateAttendance(Long id, AttendanceRequest request,
                                         String updatedByEmail);
+
+    AttendanceResponse createAttendanceForEmployee(
+            Long employeeId, AttendanceRequest request, String markedByEmail);
 }

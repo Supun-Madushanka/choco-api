@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AttendanceRequest {
 
+    private LocalDate workDate;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private String status;

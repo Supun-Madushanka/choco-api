@@ -176,6 +176,50 @@ public class AttendanceServiceImpl implements AttendanceService {
         return mapToResponse(attendance);
     }
 
+    @Override
+    @Transactional
+    public AttendanceResponse createAttendanceForEmployee(
+            Long employeeId, AttendanceRequest request, String markedByEmail) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Employee not found")
+                );
+
+        if (request.getWorkDate() == null) {
+            throw new IllegalArgumentException("Work date is required");
+        }
+
+        if (attendanceRepository.existsByEmployeeIdAndWorkDate(
+                employeeId, request.getWorkDate())) {
+            throw new IllegalArgumentException(
+                    "Attendance record already exists for this date. Please edit it instead."
+            );
+        }
+
+        if (request.getStatus() == null) {
+            throw new IllegalArgumentException("Status is required");
+        }
+
+        User markedBy = getUserByEmail(markedByEmail);
+
+        Attendance attendance = Attendance.builder()
+                .employee(employee)
+                .workDate(request.getWorkDate())
+                .checkIn(request.getCheckIn())
+                .checkOut(request.getCheckOut())
+                .status(Attendance.AttendanceStatus.valueOf(request.getStatus()))
+                .markedBy(markedBy)
+                .note(request.getNote())
+                .build();
+
+        attendanceRepository.save(attendance);
+        log.info("Attendance created manually for employee {} on {}",
+                employee.getEmployeeNo(), request.getWorkDate());
+
+        return mapToResponse(attendance);
+    }
+
     private Employee getEmployeeByUserEmail(String email) {
         User user = getUserByEmail(email);
         return employeeRepository.findByUserId(user.getId())
