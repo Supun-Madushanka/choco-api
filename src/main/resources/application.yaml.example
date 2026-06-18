@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: chocolate-factory-api
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/ceylon_chocolate_db
+    username: YOUR_DB_USERNAME
+    password: YOUR_DB_PASSWORD
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: YOUR_EMAIL
+    password: YOUR_SMTP_PASSWORD
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  jwt:
+    secret: YOUR_SECRET
+    expiration: 86400000
+    refresh-expiration: 604800000
+  mail:
+    from: YOUR_EMAIL
+    from-name: Ceylon Chocolate Factory
+  frontend:
+    url: http://localhost:3000
