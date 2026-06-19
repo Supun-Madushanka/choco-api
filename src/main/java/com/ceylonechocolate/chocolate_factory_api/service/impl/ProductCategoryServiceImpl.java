@@ -46,6 +46,7 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
         ProductCategory category = ProductCategory.builder()
                 .name(request.getName())
+                .codePrefix(request.getCodePrefix())
                 .description(request.getDescription())
                 .build();
 
@@ -70,6 +71,7 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
         }
 
         category.setName(request.getName());
+        category.setCodePrefix(request.getCodePrefix());
         category.setDescription(request.getDescription());
         categoryRepository.save(category);
 
@@ -98,6 +100,7 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
             ProductCategory category) {
         return ProductCategoryResponse.builder()
                 .id(category.getId())
+                .codePrefix(category.getCodePrefix())
                 .name(category.getName())
                 .description(category.getDescription())
                 .createdAt(category.getCreatedAt())

@@ -23,6 +23,9 @@ public class ProductCategory {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
+    @Column(name = "code_prefix", unique = true, length = 10)
+    private String codePrefix;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

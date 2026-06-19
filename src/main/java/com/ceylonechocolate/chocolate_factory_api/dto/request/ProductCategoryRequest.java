@@ -15,5 +15,7 @@ public class ProductCategoryRequest {
     @NotBlank(message = "Category name is required")
     private String name;
 
+    private String codePrefix;
+
     private String description;
 }
