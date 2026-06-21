@@ -255,9 +255,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         PurchaseOrder po = findPurchaseOrderById(id);
 
         if (po.getStatus() == PurchaseOrder.POStatus.RECEIVED ||
-                po.getStatus() == PurchaseOrder.POStatus.CANCELLED) {
+                po.getStatus() == PurchaseOrder.POStatus.CANCELLED ||
+                po.getStatus() == PurchaseOrder.POStatus.PARTIALLY_RECEIVED) {
             throw new IllegalArgumentException(
-                    "Cannot cancel a RECEIVED or already CANCELLED order"
+                    "Cannot cancel a RECEIVED or Partially received or already CANCELLED order"
             );
         }
 
